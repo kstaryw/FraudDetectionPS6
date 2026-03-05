@@ -1,22 +1,9 @@
-# FraudDetectionPS5
-Detect Fraud in large dataset
-Use this schema for a transaction
-{
-    "id": "txn_1001",
-    "accountId": "acc_001",
-    "timestamp": "2026-02-12T08:15:00Z",
-    "amount": 75.5,
-    "currency": "USD",
-    "merchant": "Local Grocery",
-    "category": "groceries",
-    "channel": "debit_card",
-    "location": "Boston, MA",
-    "deviceId": "dev_abc123"
-  }
+# FraudDetection PS5
+Detect Fraud in a large dataset
+Use this schema in sampleData.json for transactions
 
-  You should create around 100 transactions with a few that are fraudulent in each batch. 
-  
-  High-Level Architecture
+You should create around 100 transactions with a few that are fraudulent in each batch. 
+## High-Level Architecture
 
 You want:
 
