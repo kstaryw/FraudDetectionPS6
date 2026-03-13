@@ -1,0 +1,902 @@
+[
+  {
+    "id": "TXN-000001",
+    "amount": 425.01,
+    "merchant": "Grocery Store",
+    "category": "Food",
+    "timestamp": "2026-02-11T08:45:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000002",
+    "amount": 8435.43,
+    "merchant": "Casino",
+    "category": "Travel",
+    "timestamp": "2026-02-11T08:01:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000003",
+    "amount": 467.03,
+    "merchant": "Movie Theater",
+    "category": "Food",
+    "timestamp": "2026-02-11T13:06:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000004",
+    "amount": 232.67,
+    "merchant": "Gym",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T16:38:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000005",
+    "amount": 371.76,
+    "merchant": "Coffee Shop",
+    "category": "Health",
+    "timestamp": "2026-02-11T13:02:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000006",
+    "amount": 6472.18,
+    "merchant": "Casino",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T08:39:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000007",
+    "amount": 466.49,
+    "merchant": "Gas Station",
+    "category": "Food",
+    "timestamp": "2026-02-11T10:43:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000008",
+    "amount": 51.17,
+    "merchant": "Gas Station",
+    "category": "Entertainment",
+    "timestamp": "2026-02-11T17:16:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000009",
+    "amount": 242.55,
+    "merchant": "Amazon",
+    "category": "Utilities",
+    "timestamp": "2026-02-11T22:14:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000010",
+    "amount": 119.39,
+    "merchant": "Lyft",
+    "category": "Health",
+    "timestamp": "2026-02-11T10:51:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000011",
+    "amount": 222.59,
+    "merchant": "Hotel",
+    "category": "Food",
+    "timestamp": "2026-02-11T17:50:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000012",
+    "amount": 310.08,
+    "merchant": "Lyft",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T11:29:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000013",
+    "amount": 306.34,
+    "merchant": "Movie Theater",
+    "category": "Entertainment",
+    "timestamp": "2026-02-11T22:44:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000014",
+    "amount": 410.71,
+    "merchant": "Airlines",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T22:28:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000015",
+    "amount": 117.01,
+    "merchant": "Gas Station",
+    "category": "Gas",
+    "timestamp": "2026-02-11T19:11:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000016",
+    "amount": 462.84,
+    "merchant": "Uber",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T00:05:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000017",
+    "amount": 462.23,
+    "merchant": "Best Buy",
+    "category": "Services",
+    "timestamp": "2026-02-11T23:42:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000018",
+    "amount": 160.94,
+    "merchant": "Grocery Store",
+    "category": "Gas",
+    "timestamp": "2026-02-11T18:43:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000019",
+    "amount": 216.06,
+    "merchant": "Coffee Shop",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T00:15:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000020",
+    "amount": 308.99,
+    "merchant": "Movie Theater",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T01:42:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000021",
+    "amount": 6.99,
+    "merchant": "Best Buy",
+    "category": "Shopping",
+    "timestamp": "2026-02-11T18:40:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000022",
+    "amount": 8475.58,
+    "merchant": "Overseas Store",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T08:00:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000023",
+    "amount": 231.59,
+    "merchant": "Amazon",
+    "category": "Shopping",
+    "timestamp": "2026-02-11T15:42:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000024",
+    "amount": 390.71,
+    "merchant": "Best Buy",
+    "category": "Utilities",
+    "timestamp": "2026-02-11T14:17:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000025",
+    "amount": 85.38,
+    "merchant": "Target",
+    "category": "Services",
+    "timestamp": "2026-02-11T18:14:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000026",
+    "amount": 36.99,
+    "merchant": "Pharmacy",
+    "category": "Food",
+    "timestamp": "2026-02-11T23:59:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000027",
+    "amount": 415.1,
+    "merchant": "Coffee Shop",
+    "category": "Entertainment",
+    "timestamp": "2026-02-11T21:25:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000028",
+    "amount": 295.47,
+    "merchant": "Amazon",
+    "category": "Health",
+    "timestamp": "2026-02-11T23:31:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000029",
+    "amount": 316.51,
+    "merchant": "Pharmacy",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T02:58:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000030",
+    "amount": 269.96,
+    "merchant": "Grocery Store",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T01:18:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000031",
+    "amount": 494.7,
+    "merchant": "Best Buy",
+    "category": "Gas",
+    "timestamp": "2026-02-11T23:08:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000032",
+    "amount": 453.5,
+    "merchant": "Hotel",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T05:02:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000033",
+    "amount": 297.7,
+    "merchant": "Lyft",
+    "category": "Shopping",
+    "timestamp": "2026-02-11T20:08:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000034",
+    "amount": 399.68,
+    "merchant": "Coffee Shop",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T00:18:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000035",
+    "amount": 389.17,
+    "merchant": "Pharmacy",
+    "category": "Gas",
+    "timestamp": "2026-02-11T20:37:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000036",
+    "amount": 26.99,
+    "merchant": "Target",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T05:34:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000037",
+    "amount": 277.18,
+    "merchant": "Coffee Shop",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T05:13:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000038",
+    "amount": 467.95,
+    "merchant": "Gym",
+    "category": "Travel",
+    "timestamp": "2026-02-11T23:03:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000039",
+    "amount": 163.76,
+    "merchant": "Airlines",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T02:19:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000040",
+    "amount": 446.96,
+    "merchant": "Hotel",
+    "category": "Food",
+    "timestamp": "2026-02-11T18:57:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000041",
+    "amount": 173.47,
+    "merchant": "Walmart",
+    "category": "Services",
+    "timestamp": "2026-02-11T19:34:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000042",
+    "amount": 254.86,
+    "merchant": "Restaurant",
+    "category": "Transportation",
+    "timestamp": "2026-02-11T21:52:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000043",
+    "amount": 101.12,
+    "merchant": "Airlines",
+    "category": "Travel",
+    "timestamp": "2026-02-12T02:25:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000044",
+    "amount": 248.25,
+    "merchant": "Airlines",
+    "category": "Utilities",
+    "timestamp": "2026-02-11T22:12:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000045",
+    "amount": 299.81,
+    "merchant": "Airlines",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T05:48:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000046",
+    "amount": 7134.87,
+    "merchant": "Overseas Store",
+    "category": "Entertainment",
+    "timestamp": "2026-02-11T18:29:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000047",
+    "amount": 464.62,
+    "merchant": "Hotel",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T06:13:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000048",
+    "amount": 211.6,
+    "merchant": "Amazon",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T05:37:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000049",
+    "amount": 321.35,
+    "merchant": "Movie Theater",
+    "category": "Food",
+    "timestamp": "2026-02-12T05:36:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000050",
+    "amount": 479.72,
+    "merchant": "Coffee Shop",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T02:43:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000051",
+    "amount": 313.89,
+    "merchant": "Gym",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T03:09:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000052",
+    "amount": 279.59,
+    "merchant": "Amazon",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T07:32:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000053",
+    "amount": 194.92,
+    "merchant": "Coffee Shop",
+    "category": "Health",
+    "timestamp": "2026-02-12T08:43:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000054",
+    "amount": 7496.36,
+    "merchant": "Overseas Store",
+    "category": "Services",
+    "timestamp": "2026-02-11T19:02:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000055",
+    "amount": 6241.11,
+    "merchant": "Wire Transfer",
+    "category": "Utilities",
+    "timestamp": "2026-02-11T15:52:16.552834",
+    "location": "Unknown",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000056",
+    "amount": 65.67,
+    "merchant": "Gym",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T08:49:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000057",
+    "amount": 137.46,
+    "merchant": "Restaurant",
+    "category": "Gas",
+    "timestamp": "2026-02-12T02:27:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000058",
+    "amount": 100.27,
+    "merchant": "Lyft",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T00:50:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000059",
+    "amount": 490.03,
+    "merchant": "Uber",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T06:53:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000060",
+    "amount": 138.28,
+    "merchant": "Gas Station",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T09:41:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000061",
+    "amount": 2610.4,
+    "merchant": "Casino",
+    "category": "Travel",
+    "timestamp": "2026-02-11T22:05:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000062",
+    "amount": 155.89,
+    "merchant": "Amazon",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T05:23:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000063",
+    "amount": 455.71,
+    "merchant": "Gym",
+    "category": "Services",
+    "timestamp": "2026-02-12T12:25:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000064",
+    "amount": 380.74,
+    "merchant": "Lyft",
+    "category": "Gas",
+    "timestamp": "2026-02-12T03:50:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000065",
+    "amount": 167.51,
+    "merchant": "Lyft",
+    "category": "Travel",
+    "timestamp": "2026-02-12T09:45:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000066",
+    "amount": 331.43,
+    "merchant": "Uber",
+    "category": "Services",
+    "timestamp": "2026-02-12T09:15:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000067",
+    "amount": 36.98,
+    "merchant": "Target",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T13:04:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000068",
+    "amount": 270.32,
+    "merchant": "Walmart",
+    "category": "Gas",
+    "timestamp": "2026-02-12T02:56:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000069",
+    "amount": 326.55,
+    "merchant": "Lyft",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T05:11:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000070",
+    "amount": 238.01,
+    "merchant": "Gas Station",
+    "category": "Travel",
+    "timestamp": "2026-02-12T12:01:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000071",
+    "amount": 320.22,
+    "merchant": "Walmart",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T09:36:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000072",
+    "amount": 5642.39,
+    "merchant": "Overseas Store",
+    "category": "Services",
+    "timestamp": "2026-02-12T02:36:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000073",
+    "amount": 443.88,
+    "merchant": "Airlines",
+    "category": "Utilities",
+    "timestamp": "2026-02-12T05:47:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000074",
+    "amount": 499.04,
+    "merchant": "Walmart",
+    "category": "Gas",
+    "timestamp": "2026-02-12T09:04:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000075",
+    "amount": 261.04,
+    "merchant": "Movie Theater",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T05:39:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000076",
+    "amount": 107.42,
+    "merchant": "Airlines",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T13:13:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000077",
+    "amount": 240.25,
+    "merchant": "Lyft",
+    "category": "Gas",
+    "timestamp": "2026-02-12T05:12:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000078",
+    "amount": 4343.98,
+    "merchant": "Wire Transfer",
+    "category": "Services",
+    "timestamp": "2026-02-12T02:35:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000079",
+    "amount": 355.84,
+    "merchant": "Hotel",
+    "category": "Food",
+    "timestamp": "2026-02-12T07:45:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000080",
+    "amount": 3242.17,
+    "merchant": "Wire Transfer",
+    "category": "Gas",
+    "timestamp": "2026-02-12T02:49:16.552834",
+    "location": "Unknown",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000081",
+    "amount": 338.32,
+    "merchant": "Target",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T06:26:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000082",
+    "amount": 412.6,
+    "merchant": "Uber",
+    "category": "Travel",
+    "timestamp": "2026-02-12T06:45:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000083",
+    "amount": 8467.11,
+    "merchant": "Wire Transfer",
+    "category": "Health",
+    "timestamp": "2026-02-12T04:43:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000084",
+    "amount": 177.62,
+    "merchant": "Amazon",
+    "category": "Services",
+    "timestamp": "2026-02-12T17:58:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000085",
+    "amount": 274.75,
+    "merchant": "Movie Theater",
+    "category": "Gas",
+    "timestamp": "2026-02-12T09:19:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000086",
+    "amount": 121.48,
+    "merchant": "Pharmacy",
+    "category": "Services",
+    "timestamp": "2026-02-12T05:48:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000087",
+    "amount": 7275.6,
+    "merchant": "Casino",
+    "category": "Services",
+    "timestamp": "2026-02-12T06:50:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000088",
+    "amount": 39.06,
+    "merchant": "Hotel",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T10:31:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000089",
+    "amount": 353.18,
+    "merchant": "Restaurant",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T16:13:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000090",
+    "amount": 5976.79,
+    "merchant": "Casino",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T01:37:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000091",
+    "amount": 5170.23,
+    "merchant": "Casino",
+    "category": "Travel",
+    "timestamp": "2026-02-12T04:11:16.552834",
+    "location": "Canada",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000092",
+    "amount": 7.29,
+    "merchant": "Gym",
+    "category": "Food",
+    "timestamp": "2026-02-12T08:29:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000093",
+    "amount": 66.06,
+    "merchant": "Gas Station",
+    "category": "Health",
+    "timestamp": "2026-02-12T15:48:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000094",
+    "amount": 490.07,
+    "merchant": "Gym",
+    "category": "Entertainment",
+    "timestamp": "2026-02-12T11:16:16.552834",
+    "location": "Mexico",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000095",
+    "amount": 418.19,
+    "merchant": "Airlines",
+    "category": "Food",
+    "timestamp": "2026-02-12T15:23:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000096",
+    "amount": 9.64,
+    "merchant": "Amazon",
+    "category": "Gas",
+    "timestamp": "2026-02-12T20:51:16.552834",
+    "location": "USA",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000097",
+    "amount": 120.3,
+    "merchant": "Target",
+    "category": "Travel",
+    "timestamp": "2026-02-12T11:30:16.552834",
+    "location": "USA",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000098",
+    "amount": 383.1,
+    "merchant": "Walmart",
+    "category": "Transportation",
+    "timestamp": "2026-02-12T16:58:16.552834",
+    "location": "Mexico",
+    "card_present": false
+  },
+  {
+    "id": "TXN-000099",
+    "amount": 440.8,
+    "merchant": "Lyft",
+    "category": "Shopping",
+    "timestamp": "2026-02-12T14:07:16.552834",
+    "location": "Canada",
+    "card_present": true
+  },
+  {
+    "id": "TXN-000100",
+    "amount": 346.8,
+    "merchant": "Target",
+    "category": "Gas",
+    "timestamp": "2026-02-12T16:05:16.552834",
+    "location": "USA",
+    "card_present": false
+  }
+]
