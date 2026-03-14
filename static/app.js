@@ -1,326 +1,400 @@
 /**
- * Fraud Detection Frontend
- * Real-time monitoring of batch processing and suspicious transaction detection
+ * Fraud Detection PS-6 Dashboard client
+ *
+ * Responsibilities:
+ * - Initialize batch cards (batch_1 to batch_5)
+ * - Start demo run via POST /start-demo
+ * - Listen to SSE events from /events
+ * - Update Batch Status, Activity Log, and Suspicious Transactions in near real time
  */
 
-// State
-const state = {
-    isAnalyzing: false,
-    suspiciousTransactions: [],
-    batchStatus: {},
-    totalTransactions: 0,
+// -----------------------------------------------------------------------------
+// Constants and UI references
+// -----------------------------------------------------------------------------
+
+const BATCH_IDS = ["batch_1", "batch_2", "batch_3", "batch_4", "batch_5"];
+
+const ui = {
+  startButton: document.getElementById("start-demo-btn"),
+  runStatus: document.getElementById("run-status"),
+  activityLog: document.getElementById("activity-log"),
+  suspiciousList: document.getElementById("suspicious-list"),
+  suspiciousEmpty: document.getElementById("suspicious-empty"),
 };
 
-// DOM Elements
-const startBtn = document.getElementById('startBtn');
-const activityLog = document.getElementById('activityLog');
-const transactionsList = document.getElementById('transactionsList');
-const batchIndicators = document.getElementById('batchIndicators');
-const successMessage = document.getElementById('successMessage');
+const state = {
+  eventSource: null,
+  isRunning: false,
+  batchSuspiciousCounts: Object.fromEntries(BATCH_IDS.map((id) => [id, 0])),
+  seenSuspiciousKeys: new Set(),
+};
+
+// -----------------------------------------------------------------------------
+// Utility helpers
+// -----------------------------------------------------------------------------
 
 /**
- * Add entry to activity log
- * @param {string} message - Log message
- * @param {string} type - Log type: 'batch', 'suspicious', 'complete', 'error', 'info'
+ * Format a local timestamp string used in activity log lines.
+ * @returns {string}
  */
-function addLogEntry(message, type = 'info') {
-    // Clear empty state if present
-    if (activityLog.querySelector('.empty-state')) {
-        activityLog.innerHTML = '';
+function nowTime() {
+  return new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+/**
+ * Escape text before inserting into innerHTML.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/**
+ * Create a stable key used to avoid duplicate suspicious cards.
+ * @param {{id?: string, batch_id?: string}} record
+ * @returns {string}
+ */
+function suspiciousKey(record) {
+  return `${record.batch_id || "unknown"}::${record.id || "unknown"}`;
+}
+
+// -----------------------------------------------------------------------------
+// Batch status panel
+// -----------------------------------------------------------------------------
+
+/**
+ * Initialize/Reset all batch cards to pending state.
+ */
+function initBatchCards() {
+  BATCH_IDS.forEach((batchId) => {
+    state.batchSuspiciousCounts[batchId] = 0;
+    updateBatchStatus(batchId, "pending", 0);
+  });
+}
+
+/**
+ * Update one batch card's status and suspicious count.
+ * @param {string} batchId
+ * @param {"pending"|"running"|"completed"} status
+ * @param {number=} suspiciousCount
+ */
+function updateBatchStatus(batchId, status, suspiciousCount) {
+  const statusEl = document.getElementById(`batch-status-${batchId}`);
+  const countEl = document.getElementById(`batch-suspicious-${batchId}`);
+
+  if (!statusEl || !countEl) {
+    return;
+  }
+
+  statusEl.textContent = status;
+  statusEl.classList.remove("status-pending", "status-running", "status-completed");
+  statusEl.classList.add(`status-${status}`);
+
+  if (typeof suspiciousCount === "number" && Number.isFinite(suspiciousCount)) {
+    state.batchSuspiciousCounts[batchId] = suspiciousCount;
+  }
+
+  countEl.textContent = String(state.batchSuspiciousCounts[batchId] || 0);
+}
+
+/**
+ * Increment suspicious count for a batch by one.
+ * @param {string} batchId
+ */
+function incrementBatchSuspiciousCount(batchId) {
+  const next = (state.batchSuspiciousCounts[batchId] || 0) + 1;
+  updateBatchStatus(batchId, document.getElementById(`batch-status-${batchId}`)?.textContent || "running", next);
+}
+
+// -----------------------------------------------------------------------------
+// Activity log panel
+// -----------------------------------------------------------------------------
+
+/**
+ * Add one log line in timestamp order (append).
+ * @param {string} message
+ */
+function addLogEntry(message) {
+  const firstLine = ui.activityLog.querySelector(".log-entry");
+  if (firstLine && firstLine.textContent?.includes("Waiting for events")) {
+    ui.activityLog.innerHTML = "";
+  }
+
+  const line = document.createElement("p");
+  line.className = "log-entry";
+  line.textContent = `[${nowTime()}] ${message}`;
+
+  ui.activityLog.appendChild(line);
+  ui.activityLog.scrollTop = ui.activityLog.scrollHeight;
+}
+
+// -----------------------------------------------------------------------------
+// Suspicious transaction panel
+// -----------------------------------------------------------------------------
+
+/**
+ * Add one suspicious transaction card to the UI.
+ * @param {Object} record
+ */
+function addSuspiciousCard(record) {
+  const key = suspiciousKey(record);
+  if (state.seenSuspiciousKeys.has(key)) {
+    return;
+  }
+  state.seenSuspiciousKeys.add(key);
+
+  if (ui.suspiciousEmpty) {
+    ui.suspiciousEmpty.remove();
+  }
+
+  const reasons = Array.isArray(record.reasons) && record.reasons.length > 0
+    ? record.reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")
+    : "<li>n/a</li>";
+
+  const amountText = Number.isFinite(Number(record.amount))
+    ? `$${Number(record.amount).toFixed(2)}`
+    : "n/a";
+
+  const scoreText = Number.isFinite(Number(record.risk_score))
+    ? Number(record.risk_score).toFixed(2)
+    : "n/a";
+
+  const card = document.createElement("article");
+  card.className = "txn-card";
+  card.innerHTML = `
+    <h3>${escapeHtml(record.id || "unknown")}</h3>
+    <div class="txn-fields">
+      <div><strong>Amount:</strong> ${escapeHtml(amountText)}</div>
+      <div><strong>Merchant:</strong> ${escapeHtml(record.merchant || "n/a")}</div>
+      <div><strong>Location:</strong> ${escapeHtml(record.location || "n/a")}</div>
+      <div><strong>Channel:</strong> ${escapeHtml(record.channel || "n/a")}</div>
+      <div><strong>Risk Score:</strong> ${escapeHtml(scoreText)}</div>
+      <div><strong>Batch:</strong> ${escapeHtml(record.batch_id || "n/a")}</div>
+    </div>
+    <div style="margin-top: 0.45rem;">
+      <strong>Reasons:</strong>
+      <ul style="margin: 0.3rem 0 0 1rem; padding: 0;">${reasons}</ul>
+    </div>
+  `;
+
+  // Newest first
+  ui.suspiciousList.prepend(card);
+}
+
+/**
+ * Reset suspicious panel for a new run.
+ */
+function clearSuspiciousPanel() {
+  ui.suspiciousList.innerHTML = "";
+  const empty = document.createElement("p");
+  empty.className = "empty";
+  empty.id = "suspicious-empty";
+  empty.textContent = "No suspicious transactions yet.";
+  ui.suspiciousList.appendChild(empty);
+  ui.suspiciousEmpty = empty;
+  state.seenSuspiciousKeys.clear();
+}
+
+/**
+ * Fetch existing suspicious transactions from backend and render them.
+ */
+async function restoreSuspiciousRecords() {
+  try {
+    const response = await fetch("/suspicious");
+    if (!response.ok) {
+      return;
     }
 
-    const entry = document.createElement('div');
-    entry.className = `log-entry ${type}`;
+    const payload = await response.json();
+    const records = Array.isArray(payload.suspicious_transactions)
+      ? payload.suspicious_transactions
+      : [];
 
-    const timestamp = new Date().toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+    if (records.length === 0) {
+      return;
+    }
+
+    // Oldest-to-newest from file; render newest on top by iterating in order and prepend.
+    records.forEach((record) => {
+      addSuspiciousCard(record);
+      if (record.batch_id && BATCH_IDS.includes(record.batch_id)) {
+        incrementBatchSuspiciousCount(record.batch_id);
+      }
     });
 
-    entry.innerHTML = `
-        <span class="log-timestamp">${timestamp}</span>
-        <span>${message}</span>
-    `;
+    addLogEntry(`Restored ${records.length} suspicious transaction(s) from state.`);
+  } catch (error) {
+    addLogEntry(`Could not restore previous suspicious transactions: ${error}`);
+  }
+}
 
-    activityLog.insertBefore(entry, activityLog.firstChild);
+// -----------------------------------------------------------------------------
+// SSE handling
+// -----------------------------------------------------------------------------
 
-    // Keep only last 50 entries
-    while (activityLog.children.length > 50) {
-        activityLog.removeChild(activityLog.lastChild);
+/**
+ * Handle one incoming event object from SSE.
+ * @param {{type?: string, batch_id?: string, message?: string, suspicious_count?: number, transaction?: Object}} event
+ */
+function handleEvent(event) {
+  const type = event.type || "unknown";
+  const batchId = event.batch_id;
+
+  switch (type) {
+    case "batch_started": {
+      if (batchId) {
+        updateBatchStatus(batchId, "running");
+      }
+      addLogEntry(event.message || `${batchId} started`);
+      break;
     }
-}
 
-/**
- * Add transaction to suspicious list
- * @param {Object} transaction - Transaction data
- */
-function addSuspiciousTransaction(transaction) {
-    // Clear empty state if present
-    if (transactionsList.querySelector('.empty-state')) {
-        transactionsList.innerHTML = '';
+    case "batch_completed": {
+      if (batchId) {
+        const count = Number(event.suspicious_count);
+        const safeCount = Number.isFinite(count) ? count : state.batchSuspiciousCounts[batchId] || 0;
+        updateBatchStatus(batchId, "completed", safeCount);
+      }
+      addLogEntry(event.message || `${batchId} completed`);
+      break;
     }
 
-    const item = document.createElement('div');
-    item.className = 'transaction-item';
-
-    item.innerHTML = `
-        <div class="transaction-header">
-            <span class="transaction-id">${transaction.id}</span>
-            <span class="transaction-badge">SUSPICIOUS (Batch ${transaction.batch})</span>
-        </div>
-        <div class="transaction-details">
-            <div class="transaction-detail">
-                <span class="transaction-label">Amount:</span>
-                <span class="transaction-value">$${transaction.amount.toFixed(2)}</span>
-            </div>
-            <div class="transaction-detail">
-                <span class="transaction-label">Merchant:</span>
-                <span class="transaction-value">${transaction.merchant}</span>
-            </div>
-            <div class="transaction-detail">
-                <span class="transaction-label">Category:</span>
-                <span class="transaction-value">${transaction.category}</span>
-            </div>
-        </div>
-    `;
-
-    transactionsList.insertBefore(item, transactionsList.firstChild);
-
-    state.suspiciousTransactions.push(transaction.id);
-    updateStats();
-}
-
-/**
- * Initialize batch indicators
- * @param {number} count - Number of batches
- */
-function initBatchIndicators(count) {
-    batchIndicators.innerHTML = '';
-    state.batchStatus = {};
-
-    for (let i = 0; i < count; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = 'batch-indicator';
-        indicator.id = `batch-${i}`;
-
-        indicator.innerHTML = `
-            <div class="batch-label">Batch ${i}</div>
-            <div class="batch-status">
-                <span class="spinner" id="batch-${i}-spinner"></span>
-                <span id="batch-${i}-text">Pending</span>
-            </div>
-        `;
-
-        batchIndicators.appendChild(indicator);
-        state.batchStatus[i] = 'pending';
+    case "agent_started":
+    case "agent_completed":
+    case "tool_called": {
+      addLogEntry(event.message || `${type} (${batchId || "n/a"})`);
+      break;
     }
-}
 
-/**
- * Update batch status
- * @param {number} batchNum - Batch number
- * @param {string} status - New status
- * @param {number} suspiciousCount - Number of suspicious transactions found
- */
-function updateBatchStatus(batchNum, status, suspiciousCount = 0) {
-    state.batchStatus[batchNum] = status;
-
-    const indicator = document.getElementById(`batch-${batchNum}`);
-    const text = document.getElementById(`batch-${batchNum}-text`);
-    const spinner = document.getElementById(`batch-${batchNum}-spinner`);
-
-    indicator.classList.remove('processing', 'completed', 'error');
-    indicator.classList.add(status);
-
-    if (status === 'processing') {
-        spinner.style.display = 'inline-block';
-        text.textContent = 'Processing...';
-    } else if (status === 'completed') {
-        spinner.style.display = 'none';
-        text.textContent = `✓ Complete (${suspiciousCount} found)`;
-    } else if (status === 'error') {
-        spinner.style.display = 'none';
-        text.textContent = '✗ Error';
+    case "suspicious_added": {
+      const transaction = event.transaction || {};
+      addSuspiciousCard(transaction);
+      if (batchId && BATCH_IDS.includes(batchId)) {
+        incrementBatchSuspiciousCount(batchId);
+      }
+      addLogEntry(event.message || `Suspicious transaction added in ${batchId}`);
+      break;
     }
+
+    case "error": {
+      addLogEntry(`ERROR: ${event.message || "unknown error"}`);
+      if (batchId && BATCH_IDS.includes(batchId)) {
+        updateBatchStatus(batchId, "completed");
+      }
+      break;
+    }
+
+    case "run_completed": {
+      state.isRunning = false;
+      ui.startButton.disabled = false;
+      ui.runStatus.textContent = "Completed";
+      addLogEntry(event.message || "Run completed");
+      break;
+    }
+
+    default: {
+      addLogEntry(`Unhandled event: ${type}`);
+      break;
+    }
+  }
 }
 
 /**
- * Update statistics display
+ * Open (or reopen) SSE connection.
  */
-function updateStats() {
-    document.getElementById('totalTransactions').textContent = state.totalTransactions;
-    document.getElementById('suspiciousCount').textContent = state.suspiciousTransactions.length;
+function connectEventStream() {
+  if (state.eventSource) {
+    state.eventSource.close();
+  }
 
-    const rate = state.totalTransactions > 0
-        ? Math.round((state.suspiciousTransactions.length / state.totalTransactions) * 100)
-        : 0;
-    document.getElementById('detectionRate').textContent = `${rate}%`;
-}
+  const source = new EventSource("/events");
+  state.eventSource = source;
 
-/**
- * Show success message
- * @param {string} message - Message to display
- */
-function showSuccess(message) {
-    successMessage.innerHTML = `<div class="success-message">${message}</div>`;
-    successMessage.style.display = 'block';
+  source.onopen = () => {
+    addLogEntry("Connected to live event stream.");
+  };
 
-    setTimeout(() => {
-        successMessage.style.display = 'none';
-    }, 5000);
-}
-
-/**
- * Reset UI
- */
-function resetUI() {
-    state.isAnalyzing = false;
-    state.suspiciousTransactions = [];
-    state.batchStatus = {};
-    state.totalTransactions = 0;
-
-    activityLog.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">📋</div>
-            <div>No activity yet. Click "Start Analysis" to begin.</div>
-        </div>
-    `;
-
-    transactionsList.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">✓</div>
-            <div>No suspicious transactions detected yet.</div>
-        </div>
-    `;
-
-    batchIndicators.innerHTML = '';
-    updateStats();
-
-    startBtn.disabled = false;
-    startBtn.textContent = '▶ Start Analysis';
-
-    successMessage.style.display = 'none';
-}
-
-/**
- * Start fraud analysis
- */
-async function startAnalysis() {
-    if (state.isAnalyzing) return;
-
-    state.isAnalyzing = true;
-    startBtn.disabled = true;
-    startBtn.textContent = '⏳ Analyzing...';
-
-    resetUI();
-    addLogEntry('Analysis started...', 'info');
-
+  source.onmessage = (rawEvent) => {
     try {
-        // Connect to SSE
-        const eventSource = new EventSource('/api/events');
-
-        eventSource.onmessage = (event) => {
-            try {
-                const { type, data } = JSON.parse(event.data);
-
-                switch (type) {
-                    case 'status':
-                        addLogEntry(`📊 ${data.message}`, 'batch');
-                        state.totalTransactions = data.total_transactions;
-                        updateStats();
-                        break;
-
-                    case 'batch_count':
-                        addLogEntry(`📦 Split into ${data.count} batches`, 'batch');
-                        initBatchIndicators(data.count);
-                        break;
-
-                    case 'batch_status':
-                        if (data.status === 'processing') {
-                            addLogEntry(`🔄 Batch ${data.batch}: Processing ${data.transaction_count} transactions...`, 'batch');
-                            updateBatchStatus(data.batch, 'processing');
-                        } else if (data.status === 'completed') {
-                            addLogEntry(`✓ Batch ${data.batch}: Found ${data.suspicious_count} suspicious transactions`, 'complete');
-                            updateBatchStatus(data.batch, 'completed', data.suspicious_count);
-                        } else if (data.status === 'error') {
-                            addLogEntry(`✗ Batch ${data.batch}: Error - ${data.error}`, 'error');
-                            updateBatchStatus(data.batch, 'error');
-                        }
-                        break;
-
-                    case 'activity':
-                        addLogEntry(`📋 Batch ${data.batch}: ${data.message}`, 'info');
-                        addLogEntry(`🚨 Found ${data.suspicious_count} suspicious transactions in batch ${data.batch}`, 'suspicious');
-                        break;
-
-                    case 'suspicious_transaction':
-                        addLogEntry(
-                            `⚠️  Suspicious: ${data.id} - $${data.amount.toFixed(2)} at ${data.merchant} (Batch ${data.batch})`,
-                            'suspicious'
-                        );
-                        addSuspiciousTransaction(data);
-                        break;
-
-                    case 'analysis_complete':
-                        addLogEntry(`✅ Analysis Complete!`, 'complete');
-                        addLogEntry(
-                            `📈 Results: ${data.total_suspicious}/${data.total_analyzed} transactions flagged as suspicious (${data.suspicious_percentage}%)`,
-                            'complete'
-                        );
-                        
-                        showSuccess(
-                            `✅ Analysis Complete! Found ${data.total_suspicious} suspicious transactions ` +
-                            `out of ${data.total_analyzed} analyzed (${data.suspicious_percentage}%)`
-                        );
-                        
-                        eventSource.close();
-                        state.isAnalyzing = false;
-                        startBtn.disabled = false;
-                        startBtn.textContent = '▶ Start Analysis';
-                        break;
-                }
-            } catch (e) {
-                console.error('Error parsing event:', e);
-            }
-        };
-
-        eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            if (eventSource.readyState === EventSource.CLOSED) {
-                addLogEntry('Analysis connection closed', 'error');
-            }
-        };
-
-        // Start analysis on backend
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                num_transactions: 100,
-                num_batches: 5,
-            }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Analysis failed');
-        }
-
-        const result = await response.json();
-        console.log('Analysis result:', result);
-
+      const parsed = JSON.parse(rawEvent.data);
+      handleEvent(parsed);
     } catch (error) {
-        console.error('Error:', error);
-        addLogEntry(`✗ Error: ${error.message}`, 'error');
-        state.isAnalyzing = false;
-        startBtn.disabled = false;
-        startBtn.textContent = '▶ Start Analysis';
+      addLogEntry(`Failed to parse SSE event: ${error}`);
     }
+  };
+
+  source.onerror = () => {
+    addLogEntry("Event stream connection issue. Browser will retry automatically.");
+  };
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    addLogEntry('Ready for analysis', 'info');
-});
+// -----------------------------------------------------------------------------
+// Demo start flow
+// -----------------------------------------------------------------------------
+
+/**
+ * Send POST /start-demo and start one full run.
+ */
+async function startDemo() {
+  if (state.isRunning) {
+    addLogEntry("A demo run is already in progress.");
+    return;
+  }
+
+  state.isRunning = true;
+  ui.startButton.disabled = true;
+  ui.runStatus.textContent = "Starting...";
+
+  // Reset visual state for a fresh run.
+  initBatchCards();
+  clearSuspiciousPanel();
+  addLogEntry("Starting demo run...");
+
+  try {
+    const response = await fetch("/start-demo", {
+      method: "POST",
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload.message || `Request failed (${response.status})`);
+    }
+
+    ui.runStatus.textContent = "Running";
+    addLogEntry(payload.message || "Demo started.");
+  } catch (error) {
+    state.isRunning = false;
+    ui.startButton.disabled = false;
+    ui.runStatus.textContent = "Error";
+    addLogEntry(`Failed to start demo: ${error}`);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Page bootstrap
+// -----------------------------------------------------------------------------
+
+function attachEventHandlers() {
+  ui.startButton.addEventListener("click", startDemo);
+}
+
+function bootstrap() {
+  initBatchCards();
+  attachEventHandlers();
+  connectEventStream();
+  restoreSuspiciousRecords();
+}
+
+document.addEventListener("DOMContentLoaded", bootstrap);
