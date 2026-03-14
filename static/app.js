@@ -15,10 +15,10 @@
 const BATCH_IDS = ["batch_1", "batch_2", "batch_3", "batch_4", "batch_5"];
 
 const ui = {
-  startButton: document.getElementById("start-demo-btn"),
+  startButton: document.getElementById("start-demo-btn") || document.getElementById("startBtn"),
   runStatus: document.getElementById("run-status"),
-  activityLog: document.getElementById("activity-log"),
-  suspiciousList: document.getElementById("suspicious-list"),
+  activityLog: document.getElementById("activity-log") || document.getElementById("activityLog"),
+  suspiciousList: document.getElementById("suspicious-list") || document.getElementById("transactionsList"),
   suspiciousEmpty: document.getElementById("suspicious-empty"),
 };
 
@@ -126,6 +126,11 @@ function incrementBatchSuspiciousCount(batchId) {
  * @param {string} message
  */
 function addLogEntry(message) {
+  if (!ui.activityLog) {
+    console.log(`[FraudDetection] ${message}`);
+    return;
+  }
+
   const firstLine = ui.activityLog.querySelector(".log-entry");
   if (firstLine && firstLine.textContent?.includes("Waiting for events")) {
     ui.activityLog.innerHTML = "";
@@ -148,6 +153,10 @@ function addLogEntry(message) {
  * @param {Object} record
  */
 function addSuspiciousCard(record) {
+  if (!ui.suspiciousList) {
+    return;
+  }
+
   const key = suspiciousKey(record);
   if (state.seenSuspiciousKeys.has(key)) {
     return;
@@ -196,6 +205,10 @@ function addSuspiciousCard(record) {
  * Reset suspicious panel for a new run.
  */
 function clearSuspiciousPanel() {
+  if (!ui.suspiciousList) {
+    return;
+  }
+
   ui.suspiciousList.innerHTML = "";
   const empty = document.createElement("p");
   empty.className = "empty";
@@ -353,8 +366,12 @@ async function startDemo() {
   }
 
   state.isRunning = true;
-  ui.startButton.disabled = true;
-  ui.runStatus.textContent = "Starting...";
+  if (ui.startButton) {
+    ui.startButton.disabled = true;
+  }
+  if (ui.runStatus) {
+    ui.runStatus.textContent = "Starting...";
+  }
 
   // Reset visual state for a fresh run.
   initBatchCards();
@@ -372,12 +389,18 @@ async function startDemo() {
       throw new Error(payload.message || `Request failed (${response.status})`);
     }
 
-    ui.runStatus.textContent = "Running";
+    if (ui.runStatus) {
+      ui.runStatus.textContent = "Running";
+    }
     addLogEntry(payload.message || "Demo started.");
   } catch (error) {
     state.isRunning = false;
-    ui.startButton.disabled = false;
-    ui.runStatus.textContent = "Error";
+    if (ui.startButton) {
+      ui.startButton.disabled = false;
+    }
+    if (ui.runStatus) {
+      ui.runStatus.textContent = "Error";
+    }
     addLogEntry(`Failed to start demo: ${error}`);
   }
 }
@@ -387,14 +410,26 @@ async function startDemo() {
 // -----------------------------------------------------------------------------
 
 function attachEventHandlers() {
-  ui.startButton.addEventListener("click", startDemo);
+  if (ui.startButton) {
+    ui.startButton.addEventListener("click", startDemo);
+  } else {
+    console.warn("[FraudDetection] Start button not found in DOM.");
+  }
 }
 
 function bootstrap() {
+  if (!ui.activityLog || !ui.suspiciousList) {
+    console.warn("[FraudDetection] Some expected DOM elements were not found. Check templates/index.html IDs.");
+  }
+
   initBatchCards();
   attachEventHandlers();
   connectEventStream();
   restoreSuspiciousRecords();
 }
+
+// Backward-compatibility global handlers (useful if an old HTML template uses inline onclick)
+window.startDemo = startDemo;
+window.startAnalysis = startDemo;
 
 document.addEventListener("DOMContentLoaded", bootstrap);
