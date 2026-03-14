@@ -165,28 +165,6 @@ This file acts as app state and can be reloaded by the UI (`GET /suspicious`). W
 ### Live Updates
 The backend publishes events into an in-memory event manager, and the frontend consumes them through SSE (`/events`) for near real-time status/log/transaction updates.
 
-## Assignment Satisfaction Checklist
-
-This implementation satisfies the assignment requirements:
-
-- ✅ **100 transactions**
-  - generated and stored in `data/transactions_100.json`
-
-- ✅ **5 batches of 20**
-  - chunking function creates five fixed-size batches
-
-- ✅ **parallel LLM calls**
-  - batches run concurrently via async tasks + `asyncio.gather`
-
-- ✅ **suspicious transaction accumulator file**
-  - every suspicious result appended to `state/suspicious_transactions.jsonl`
-
-- ✅ **near real-time UI**
-  - SSE stream updates dashboard as events occur
-
-- ✅ **monitoring of agent and tool calls**
-  - activity log receives `agent_*` and `tool_called` events
-
 ## Quick Run (Codespaces)
 
 ```bash
