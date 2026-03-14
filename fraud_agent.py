@@ -1,155 +1,165 @@
-"""
-Fraud detection agent that uses an LLM to analyze transaction batches.
-Processes transactions with LangChain agents and tools.
-"""
+"""Batch fraud analysis helpers built on the OpenAI API."""
 
+from __future__ import annotations
+
+import importlib
 import json
 import os
-from typing import List, Dict, Any
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import ChatOpenAI
-from tools import (
-    check_transaction_amount,
-    check_merchant_category,
-    check_location_anomaly,
-    summarize_transaction_risk,
-)
+from typing import Any
 
 
-def create_fraud_agent() -> AgentExecutor:
-    """
-    Create a fraud detection agent with tools.
-    
-    Returns:
-        Initialized AgentExecutor with fraud detection tools
-    """
-    # Get API key from environment
+DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+
+def empty_result(batch_id: str) -> dict[str, Any]:
+    """Return the safe fallback shape used for all failures."""
+
+    return {"batch_id": batch_id, "suspicious": []}
+
+
+def build_prompt(batch_id: str, transactions: list[dict[str, Any]]) -> str:
+    """Build a strict prompt that keeps the model grounded in the provided batch."""
+
+    transaction_json = json.dumps(transactions, indent=2)
+    return f"""
+You are a fraud detection analyst.
+
+Analyze exactly one batch of financial transactions and identify suspicious transactions.
+
+Hard rules:
+- Only use the transactions provided in this prompt.
+- Do not invent transaction IDs, accounts, devices, merchants, timestamps, or reasons.
+- Only include a transaction in the suspicious list if its id exists in the provided batch.
+- If nothing is suspicious, return an empty suspicious array.
+- Evaluate risk using only these signals when present: amount, channel, location, device, merchant type, and unusual behavior across the batch.
+- Prefer concise, evidence-based reasons.
+- Return valid JSON only. Do not wrap the JSON in markdown fences.
+
+Return this exact JSON shape:
+{{
+  "batch_id": "{batch_id}",
+  "suspicious": [
+    {{
+      "id": "txn_0007",
+      "risk_score": 0.95,
+      "reasons": ["high amount", "unknown device", "foreign location"]
+    }}
+  ]
+}}
+
+Additional constraints:
+- risk_score must be between 0 and 1.
+- reasons must be a list of short strings.
+- Keep the batch_id exactly as "{batch_id}".
+
+Transactions:
+{transaction_json}
+""".strip()
+
+
+def validate_ids_exist(transactions: list[dict[str, Any]], suspicious_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter model output so only transaction IDs from the input batch survive."""
+
+    valid_ids = {str(transaction.get("id")) for transaction in transactions if transaction.get("id")}
+    validated: list[dict[str, Any]] = []
+
+    for item in suspicious_items:
+        candidate_id = str(item.get("id", "")).strip()
+        if candidate_id not in valid_ids:
+            continue
+
+        raw_score = item.get("risk_score", 0)
+        try:
+            risk_score = float(raw_score)
+        except (TypeError, ValueError):
+            risk_score = 0.0
+
+        normalized_reasons = [
+            str(reason).strip()
+            for reason in item.get("reasons", [])
+            if isinstance(reason, str) and reason.strip()
+        ]
+
+        validated.append(
+            {
+                "id": candidate_id,
+                "risk_score": max(0.0, min(1.0, risk_score)),
+                "reasons": normalized_reasons,
+            }
+        )
+
+    return validated
+
+
+def parse_model_response(content: str, batch_id: str, transactions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Parse and normalize the model JSON response into the expected output shape."""
+
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError:
+        return empty_result(batch_id)
+
+    if not isinstance(payload, dict):
+        return empty_result(batch_id)
+
+    suspicious_items = payload.get("suspicious", [])
+    if not isinstance(suspicious_items, list):
+        suspicious_items = []
+
+    validated_items = validate_ids_exist(transactions, suspicious_items)
+    returned_batch_id = payload.get("batch_id")
+
+    return {
+        "batch_id": returned_batch_id if returned_batch_id == batch_id else batch_id,
+        "suspicious": validated_items,
+    }
+
+
+def build_client() -> Any:
+    """Create an async OpenAI client using the configured API key."""
+
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable not set")
-    
-    # Initialize LLM
-    llm = ChatOpenAI(
-        model="gpt-4-turbo",
-        temperature=0,
-        api_key=api_key,
-    )
-    
-    # Define tools
-    tools = [
-        check_transaction_amount,
-        check_merchant_category,
-        check_location_anomaly,
-        summarize_transaction_risk,
-    ]
-    
-    # Create prompt
-    prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            """You are a fraud detection specialist analyzing financial transactions.
-            
-Your task is to evaluate each transaction and determine if it is suspicious.
-Use the available tools to check:
-1. Transaction amount (unusual amounts are suspicious)
-2. Merchant-category combinations (some combinations are high-risk)
-3. Location anomalies (unknown locations or mismatched card-present status)
-4. Overall risk assessment combining all factors
 
-For each transaction, you MUST provide a final decision:
-- If risk score >= 5, the transaction is SUSPICIOUS
-- If risk score < 5, the transaction is LEGITIMATE
-
-Always include the transaction ID in your response."""
-        ),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-    
-    # Create agent
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    
-    # Create executor
-    executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,
-    )
-    
-    return executor
+    openai_module = importlib.import_module("openai")
+    async_openai = getattr(openai_module, "AsyncOpenAI")
+    return async_openai(api_key=api_key)
 
 
-async def analyze_transaction_batch(
-    batch_num: int,
-    transactions: List[Dict[str, Any]],
-) -> tuple[List[str], List[Dict[str, Any]]]:
+async def analyze_batch(batch_id: str, transactions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Analyze one batch of transactions and return validated suspicious results.
+
+    The function always returns a safe dictionary in the expected shape, even if the
+    OpenAI request fails or the model returns invalid JSON.
     """
-    Analyze a batch of transactions for fraud using the agent.
-    
-    Args:
-        batch_num: Batch number for logging
-        transactions: List of transactions to analyze
-    
-    Returns:
-        Tuple of (suspicious_ids, detailed_results)
-    """
-    agent = create_fraud_agent()
-    suspicious_ids = []
-    detailed_results = []
-    
-    for txn in transactions:
-        # Create analysis prompt
-        txn_json = json.dumps(txn, indent=2)
-        prompt = f"""Analyze this transaction for fraud:
 
-{txn_json}
+    if not transactions:
+        return empty_result(batch_id)
 
-Check all risk factors using the available tools, then provide a final determination:
-Is this transaction SUSPICIOUS or LEGITIMATE?
-Include the transaction ID in your response."""
-        
-        try:
-            # Run agent analysis
-            result = agent.invoke({"input": prompt})
-            
-            response_text = result.get("output", "")
-            
-            # Extract decision from response
-            is_suspicious = "SUSPICIOUS" in response_text.upper()
-            
-            detailed_results.append({
-                "transaction_id": txn["id"],
-                "batch": batch_num,
-                "is_suspicious": is_suspicious,
-                "analysis": response_text[:500],  # Store first 500 chars
-            })
-            
-            if is_suspicious:
-                suspicious_ids.append(txn["id"])
-        
-        except Exception as e:
-            print(f"  ✗ Error analyzing {txn['id']}: {str(e)}")
-            detailed_results.append({
-                "transaction_id": txn["id"],
-                "batch": batch_num,
-                "is_suspicious": False,
-                "analysis": f"Error: {str(e)}",
-            })
-    
-    return suspicious_ids, detailed_results
+    prompt = build_prompt(batch_id, transactions)
 
+    try:
+        client = build_client()
+        response = await client.chat.completions.create(
+            model=DEFAULT_MODEL,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You detect suspicious financial transactions and output strict JSON only.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+        )
+    except Exception:
+        return empty_result(batch_id)
 
-def validate_transaction_id(transaction_id: str, all_transactions: List[Dict[str, Any]]) -> bool:
-    """
-    Validate that a transaction ID exists in the dataset.
-    
-    Args:
-        transaction_id: ID to validate
-        all_transactions: List of all available transactions
-    
-    Returns:
-        True if ID is valid, False otherwise
-    """
-    valid_ids = {txn["id"] for txn in all_transactions}
-    return transaction_id in valid_ids
+    message = response.choices[0].message if response.choices else None
+    content = message.content if message and message.content else ""
+
+    if not isinstance(content, str) or not content.strip():
+        return empty_result(batch_id)
+
+    return parse_model_response(content, batch_id, transactions)
