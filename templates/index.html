@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fraud Detection PS-6 Dashboard</title>
+  <title>Fraud Detection Dashboard</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -74,9 +74,39 @@
       cursor: not-allowed;
     }
 
-    .status-note {
+    .status-badge {
+      border: 1px solid var(--border);
+      background: #eef2ff;
+      color: #1e3a8a;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .summary-item {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 0.5rem;
+      padding: 0.7rem;
+    }
+
+    .summary-label {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.82rem;
+    }
+
+    .summary-value {
+      margin-top: 0.15rem;
+      font-size: 1.1rem;
+      font-weight: 700;
     }
 
     section {
@@ -103,6 +133,33 @@
       border-radius: 0.45rem;
       padding: 0.65rem;
       background: #fafafa;
+    }
+
+    .lane {
+      margin-top: 0.45rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 0.45rem;
+      min-height: 2.2rem;
+    }
+
+    .lane-title {
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .lane-events {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+
+    .lane-pill {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.72rem;
+      background: #f3f4f6;
     }
 
     .batch-card .label {
@@ -135,6 +192,51 @@
     .log-entry {
       margin: 0 0 0.45rem;
       word-break: break-word;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .log-badge {
+      border-radius: 999px;
+      font-size: 0.7rem;
+      padding: 0.12rem 0.45rem;
+      font-weight: 700;
+      min-width: 3.6rem;
+      text-align: center;
+    }
+
+    .badge-agent { background: #dbeafe; color: #1d4ed8; }
+    .badge-tool { background: #fef3c7; color: #92400e; }
+    .badge-batch { background: #e5e7eb; color: #374151; }
+    .badge-result { background: #dcfce7; color: #166534; }
+    .badge-error { background: #fee2e2; color: #991b1b; }
+
+    .log-text {
+      flex: 1;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.55rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .filters label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .filters input,
+    .filters select {
+      width: 100%;
+      padding: 0.4rem;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      background: #fff;
     }
 
     .transactions {
@@ -154,8 +256,53 @@
     }
 
     .txn-card h3 {
-      margin: 0 0 0.5rem;
+      margin: 0;
       font-size: 0.95rem;
+    }
+
+    .txn-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.45rem;
+      gap: 0.4rem;
+    }
+
+    .risk-pill {
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .txn-subline {
+      color: #374151;
+      font-size: 0.86rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .reason-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+    }
+
+    .reason-chip {
+      font-size: 0.74rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.12rem 0.45rem;
+      background: #f9fafb;
+    }
+
+    details.debug {
+      margin-top: 0.45rem;
+      font-size: 0.78rem;
+      color: #4b5563;
     }
 
     .txn-fields {
@@ -170,18 +317,39 @@
       font-size: 0.9rem;
       margin: 0;
     }
+
+    @media (max-width: 780px) {
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Fraud Detection PS-6 Dashboard</h1>
+      <h1>Fraud Detection Dashboard</h1>
       <p class="subtitle">Live monitoring for 5 parallel fraud-analysis batches</p>
     </header>
 
     <div class="controls">
       <button id="start-demo-btn" type="button">Start Demo</button>
-      <span id="run-status" class="status-note">Idle</span>
+      <span id="run-status" class="status-badge">Run Idle</span>
+    </div>
+
+    <div class="summary-strip" aria-label="Run Summary">
+      <div class="summary-item">
+        <div class="summary-label">Transactions</div>
+        <div class="summary-value" id="summary-transactions">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Batches Complete</div>
+        <div class="summary-value" id="summary-batches">0/5</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Suspicious Found</div>
+        <div class="summary-value" id="summary-suspicious">0</div>
+      </div>
     </div>
 
     <main>
@@ -195,6 +363,10 @@
             <div class="value status-pending" id="batch-status-batch_1">pending</div>
             <div class="label">Suspicious Count</div>
             <div class="value" id="batch-suspicious-batch_1">0</div>
+            <div class="lane">
+              <div class="lane-title">Parallel Lane</div>
+              <div class="lane-events" id="batch-lane-batch_1"></div>
+            </div>
           </article>
 
           <article class="batch-card" id="batch-card-batch_2">
@@ -204,6 +376,10 @@
             <div class="value status-pending" id="batch-status-batch_2">pending</div>
             <div class="label">Suspicious Count</div>
             <div class="value" id="batch-suspicious-batch_2">0</div>
+            <div class="lane">
+              <div class="lane-title">Parallel Lane</div>
+              <div class="lane-events" id="batch-lane-batch_2"></div>
+            </div>
           </article>
 
           <article class="batch-card" id="batch-card-batch_3">
@@ -213,6 +389,10 @@
             <div class="value status-pending" id="batch-status-batch_3">pending</div>
             <div class="label">Suspicious Count</div>
             <div class="value" id="batch-suspicious-batch_3">0</div>
+            <div class="lane">
+              <div class="lane-title">Parallel Lane</div>
+              <div class="lane-events" id="batch-lane-batch_3"></div>
+            </div>
           </article>
 
           <article class="batch-card" id="batch-card-batch_4">
@@ -222,6 +402,10 @@
             <div class="value status-pending" id="batch-status-batch_4">pending</div>
             <div class="label">Suspicious Count</div>
             <div class="value" id="batch-suspicious-batch_4">0</div>
+            <div class="lane">
+              <div class="lane-title">Parallel Lane</div>
+              <div class="lane-events" id="batch-lane-batch_4"></div>
+            </div>
           </article>
 
           <article class="batch-card" id="batch-card-batch_5">
@@ -231,6 +415,10 @@
             <div class="value status-pending" id="batch-status-batch_5">pending</div>
             <div class="label">Suspicious Count</div>
             <div class="value" id="batch-suspicious-batch_5">0</div>
+            <div class="lane">
+              <div class="lane-title">Parallel Lane</div>
+              <div class="lane-events" id="batch-lane-batch_5"></div>
+            </div>
           </article>
         </div>
       </section>
@@ -244,6 +432,27 @@
 
       <section aria-labelledby="suspicious-heading">
         <h2 id="suspicious-heading">Suspicious Transactions</h2>
+        <div class="filters" aria-label="Suspicious Filters">
+          <div>
+            <label for="filter-batch">Batch</label>
+            <select id="filter-batch">
+              <option value="all">All batches</option>
+              <option value="batch_1">batch_1</option>
+              <option value="batch_2">batch_2</option>
+              <option value="batch_3">batch_3</option>
+              <option value="batch_4">batch_4</option>
+              <option value="batch_5">batch_5</option>
+            </select>
+          </div>
+          <div>
+            <label for="filter-risk">Min Risk Score</label>
+            <input id="filter-risk" type="number" min="0" max="1" step="0.01" placeholder="0.00" />
+          </div>
+          <div>
+            <label for="filter-merchant">Merchant</label>
+            <input id="filter-merchant" type="text" placeholder="e.g. Velvet Luxe" />
+          </div>
+        </div>
         <div id="suspicious-list" class="transactions">
           <p class="empty" id="suspicious-empty">No suspicious transactions yet.</p>
         </div>
