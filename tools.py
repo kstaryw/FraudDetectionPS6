@@ -1,118 +1,131 @@
-"""
-Tool definitions for the fraud detection agent.
-These tools help the agent analyze transactions for suspicious patterns.
-"""
+"""Utility helpers for chunking, state management, and SSE-style event broadcasting."""
 
-from typing import Dict, List, Any
-from langchain.tools import tool
+from __future__ import annotations
+
+import asyncio
 import json
+from collections.abc import AsyncGenerator
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 
-@tool
-def check_transaction_amount(amount: float) -> str:
-    """
-    Check if transaction amount is unusually high.
-    
+STATE_FILE_DEFAULT = "state/suspicious_transactions.jsonl"
+
+
+# Lock used by append_suspicious_transaction to prevent write races.
+_state_file_lock = asyncio.Lock()
+
+
+# In-memory pub/sub for SSE consumers.
+_subscribers: set[asyncio.Queue[dict[str, Any]]] = set()
+_subscribers_lock = asyncio.Lock()
+
+
+def chunk_transactions(transactions: list[dict], size: int = 20) -> list[list[dict]]:
+    """Split transactions into fixed-size chunks.
+
     Args:
-        amount: Transaction amount in dollars
-    
+        transactions: Full transaction list.
+        size: Chunk size. Defaults to 20.
+
     Returns:
-        Assessment of whether amount is suspicious
+        List of transaction batches.
     """
-    if amount > 1000:
-        return f"SUSPICIOUS: Amount ${amount} exceeds typical transaction limit of $1000"
-    elif amount > 500:
-        return f"WARNING: Amount ${amount} is above average (typical range: $5-$500)"
-    else:
-        return f"NORMAL: Amount ${amount} is within typical range"
+    if size <= 0:
+        raise ValueError("size must be greater than 0")
+
+    return [transactions[index:index + size] for index in range(0, len(transactions), size)]
 
 
-@tool
-def check_merchant_category(merchant: str, category: str) -> str:
+async def append_suspicious_transaction(
+    record: dict,
+    path: str = STATE_FILE_DEFAULT,
+) -> None:
+    """Append one suspicious transaction record as a JSONL line.
+
+    The function uses an asyncio lock to avoid race conditions during
+    concurrent writes from parallel batch workers.
     """
-    Check if merchant and category combination is suspicious.
-    
-    Args:
-        merchant: Merchant name
-        category: Transaction category
-    
-    Returns:
-        Assessment of merchant-category combination
-    """
-    high_risk_merchants = {
-        "Casino": ["Travel", "Entertainment"],
-        "Wire Transfer": ["Travel", "Shopping"],
-        "Overseas Store": ["Shopping", "Services"],
+    file_path = Path(path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    line = json.dumps(record, ensure_ascii=False)
+
+    async with _state_file_lock:
+        with file_path.open("a", encoding="utf-8") as handle:
+            handle.write(f"{line}\n")
+
+
+def load_suspicious_transactions(path: str = STATE_FILE_DEFAULT) -> list[dict]:
+    """Load all suspicious transaction records from a JSONL file."""
+    file_path = Path(path)
+    if not file_path.exists():
+        return []
+
+    records: list[dict] = []
+    with file_path.open("r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                parsed = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                records.append(parsed)
+    return records
+
+
+def reset_state_file(path: str = STATE_FILE_DEFAULT) -> None:
+    """Clear the suspicious transaction accumulator for a fresh run."""
+    file_path = Path(path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text("", encoding="utf-8")
+
+
+def build_activity_event(
+    event_type: str,
+    batch_id: str,
+    message: str,
+    extra: dict | None = None,
+) -> dict:
+    """Build a standardized activity event payload for the frontend."""
+    event: dict[str, Any] = {
+        "type": event_type,
+        "batch_id": batch_id,
+        "message": message,
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
-    
-    if merchant in high_risk_merchants:
-        if category in high_risk_merchants[merchant]:
-            return f"SUSPICIOUS: '{merchant}' + '{category}' is a high-risk combination"
-        else:
-            return f"HIGH RISK: Merchant '{merchant}' is inherently high-risk"
-    
-    return f"NORMAL: Merchant '{merchant}' is low-risk"
+    if extra:
+        event.update(extra)
+    return event
 
 
-@tool
-def check_location_anomaly(location: str, card_present: bool) -> str:
-    """
-    Check if location is anomalous.
-    
-    Args:
-        location: Transaction location
-        card_present: Whether card was physically present
-    
-    Returns:
-        Assessment of location-based risk
-    """
-    if location == "Unknown":
-        return "SUSPICIOUS: Location is unknown - cannot verify legitimacy"
-    
-    if location not in ["USA", "Canada"] and not card_present:
-        return f"SUSPICIOUS: International transaction ({location}) without card present"
-    
-    return f"NORMAL: Location '{location}' appears legitimate"
+async def publish_event(event: dict) -> None:
+    """Publish an event to all active subscribers."""
+    async with _subscribers_lock:
+        subscribers = list(_subscribers)
+
+    for queue in subscribers:
+        await queue.put(event)
 
 
-@tool
-def summarize_transaction_risk(transaction_data: str) -> str:
+async def event_stream() -> AsyncGenerator[dict, None]:
+    """Yield events for one connected consumer.
+
+    Consumers can serialize yielded dictionaries as SSE payloads.
     """
-    Summarize overall risk level for a transaction.
-    Combines multiple risk factors.
-    
-    Args:
-        transaction_data: JSON string of full transaction details
-    
-    Returns:
-        Overall risk assessment
-    """
+    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+
+    async with _subscribers_lock:
+        _subscribers.add(queue)
+
     try:
-        txn = json.loads(transaction_data)
-        
-        # Simple risk scoring
-        risk_score = 0
-        
-        if txn.get("amount", 0) > 1000:
-            risk_score += 3
-        elif txn.get("amount", 0) > 500:
-            risk_score += 1
-        
-        if txn.get("merchant") in ["Casino", "Wire Transfer", "Overseas Store"]:
-            risk_score += 3
-        
-        if txn.get("location") == "Unknown":
-            risk_score += 2
-        
-        if txn.get("location") not in ["USA", "Canada"] and not txn.get("card_present"):
-            risk_score += 2
-        
-        if risk_score >= 5:
-            return f"HIGH RISK: Risk score {risk_score}/10 - Transaction requires review"
-        elif risk_score >= 3:
-            return f"MEDIUM RISK: Risk score {risk_score}/10 - Potential concern"
-        else:
-            return f"LOW RISK: Risk score {risk_score}/10 - Appears legitimate"
-    
-    except Exception as e:
-        return f"ERROR: Could not assess risk - {str(e)}"
+        while True:
+            event = await queue.get()
+            yield event
+    finally:
+        async with _subscribers_lock:
+            _subscribers.discard(queue)
